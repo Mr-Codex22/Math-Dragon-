@@ -1,10 +1,13 @@
 const { REST, Routes } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
+const config = require('./config.json'); // ← Asegúrate que este archivo esté correcto
 
 // Obtener desde variables de entorno
-const clientId = process.env.clientId;
-const token = process.env.token;
+// Obtener desde config.json
+const clientId = config.clientId;
+const token = config.token;
+
 
 const commands = [];
 const foldersPath = path.join(__dirname, 'commands');
