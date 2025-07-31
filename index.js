@@ -4,7 +4,8 @@ const express = require('express');
 const { Collection, Client, Events, GatewayIntentBits } = require('discord.js');
 
 // ⚠️ Soporte para token en mayúscula o minúscula
-const token = process.env.TOKEN || process.env.token;
+const token = process.env.token;
+
 if (!token) {
     console.error("❌ No se encontró el TOKEN en variables de entorno");
     process.exit(1);
