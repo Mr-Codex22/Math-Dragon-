@@ -1,13 +1,16 @@
-const fs = require('fs')
-const path = require('path')
-const express = require('express')
+const fs = require('fs');
+const path = require('path');
+const express = require('express');
+const { Collection, Client, Events, GatewayIntentBits } = require('discord.js');
 
-const {Collection, Client, Events, GatewayIntentBits} = require("discord.js")
-const token = process.env.token;
+// ⚠️ Soporte para token en mayúscula o minúscula
+const token = process.env.TOKEN || process.env.token;
+if (!token) {
+    console.error("❌ No se encontró el TOKEN en variables de entorno");
+    process.exit(1);
+}
 
-
-const client = new Client({intents: [GatewayIntentBits.Guilds]})
-
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 client.commands = new Collection();
 
 // Express para mantener activo en Render
@@ -20,56 +23,64 @@ app.listen(PORT, () => {
     console.log(`🌐 Servidor Express activo en puerto ${PORT}`);
 });
 
+// Cargar comandos
+const foldersPath = path.join(__dirname, 'commands');
+const commandFolders = fs.readdirSync(foldersPath);
 
-    const foldersPath = path.join(__dirname, 'commands')
-    const commandFolders = fs.readdirSync(foldersPath)
+for (const folder of commandFolders) {
+    const commandsPath = path.join(foldersPath, folder);
+    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
-    for (const  folder of commandFolders) {
-        
-        const commandsPath = path.join(foldersPath, folder)
-        const commandFiles = fs.readdirSync(commandsPath).filter (file => file.endsWith('.js')) 
-
-            for (const file of commandFiles) {
-                const filePath = path.join(commandsPath, file)
-                const command = require(filePath)
-                    if ('data' in command && 'execute' in command) {
-                            client.commands.set(command.data.name, command)
-
-                    } else {
-                        console.log(`[WARNING] the command ${filePath} is missing a required "data" or "execute" property. `)
-                    }
-            }
-
-
+    for (const file of commandFiles) {
+        const filePath = path.join(commandsPath, file);
+        const command = require(filePath);
+        if ('data' in command && 'execute' in command) {
+            client.commands.set(command.data.name, command);
+        } else {
+            console.log(`[WARNING] El comando ${filePath} no tiene "data" o "execute".`);
+        }
     }
+}
 
+// Cuando el bot esté listo
 client.once(Events.ClientReady, readyClient => {
-    console.log(`BOT started how ${readyClient.user.tag}`)
-})
-
-
-client.on(Events.InteractionCreate, async interaction => {
-	if (!interaction.isChatInputCommand()) return;
-
-	const command = interaction.client.commands.get(interaction.commandName);
-
-	if (!command) {
-		console.error(`No command matching ${interaction.commandName} was found.`);
-		return;
-	}
-
-	try {
-		await command.execute(interaction);
-	} catch (error) {
-		console.error(error);
-		if (interaction.replied || interaction.deferred) {
-			await interaction.followUp({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
-		} else {
-			await interaction.reply({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
-		}
-	}
+    console.log(`BOT started how ${readyClient.user.tag}`);
 });
 
+// Manejo de interacciones
+client.on(Events.InteractionCreate, async interaction => {
+    if (!interaction.isChatInputCommand()) return;
 
+    const command = interaction.client.commands.get(interaction.commandName);
 
-client.login(token)
+    if (!command) {
+        console.error(`No se encontró el comando ${interaction.commandName}`);
+        return;
+    }
+
+    try {
+        await command.execute(interaction);
+    } catch (error) {
+        console.error(error);
+        const replyOptions = {
+            content: 'Hubo un error al ejecutar el comando.',
+            ephemeral: true,
+        };
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp(replyOptions);
+        } else {
+            await interaction.reply(replyOptions);
+        }
+    }
+});
+
+// Iniciar sesión en Discord
+client.login(token);
+
+// Manejo de errores generales
+process.on('unhandledRejection', error => {
+    console.error('🚨 Rechazo no manejado:', error);
+});
+process.on('uncaughtException', error => {
+    console.error('🚨 Excepción no manejada:', error);
+});
