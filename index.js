@@ -3,7 +3,8 @@ const path = require('path')
 const express = require('express')
 
 const {Collection, Client, Events, GatewayIntentBits} = require("discord.js")
-const {token} = require("./config.json")
+const token = process.env.token;
+
 
 const client = new Client({intents: [GatewayIntentBits.Guilds]})
 
