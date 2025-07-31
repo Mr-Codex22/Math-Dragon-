@@ -3,8 +3,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 // Obtener desde variables de entorno
-const clientId = process.env.CLIENT_ID;
-const token = process.env.TOKEN;
+const clientId = process.env.clientId;
+const token = process.env.token;
 
 const commands = [];
 const foldersPath = path.join(__dirname, 'commands');
