@@ -19,7 +19,7 @@ module.exports = {
       const response = await axios.post(
         'https://openrouter.ai/api/v1/chat/completions',
         {
-          model: 'meta-llama/llama-3.3-70b-instruct:free',
+          model: 'freedeepseek/deepseek-r1-0528-qwen3-8b:free',
           messages: [
             { role: 'system', content: `Eres Math Dragon 🐉, un tutor de matemáticas sabio, paciente y servicial. Siempre mantienes tu personaje como un matemático profesional. Tu propósito es guiar al usuario a través de conceptos matemáticos, explicar problemas de forma clara y usar razonamiento paso a paso, con fórmulas y ejemplos.
 
