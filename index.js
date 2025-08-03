@@ -1,17 +1,16 @@
+require('dotenv').config(); 
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const { Collection, Client, Events, GatewayIntentBits } = require('discord.js');
 
-// ⚠️ Soporte para token en mayúscula o minúscula
 const token = process.env.token;
-
 if (!token) {
     console.error("❌ No se encontró el TOKEN en variables de entorno");
     process.exit(1);
 }
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 client.commands = new Collection();
 
 // Express para mantener activo en Render
@@ -43,9 +42,28 @@ for (const folder of commandFolders) {
     }
 }
 
+// Ejecutar tareas globales al iniciar
+async function tareasGlobales() {
+    const canalID = process.env.DEFAULT_CHANNEL_ID;
+    if (!canalID) return;
+    try {
+        const canal = await client.channels.fetch(canalID);
+        if (canal && canal.send) {
+            await Promise.all([
+                canal.send('🔧 Ejecutando Tarea A (global)...'),
+                canal.send('⚙️ Ejecutando Tarea B (global)...'),
+                canal.send('🚀 Ejecutando Tarea C (global)...')
+            ]);
+        }
+    } catch (err) {
+        console.error('❌ Error en tareasGlobales:', err);
+    }
+}
+
 // Cuando el bot esté listo
-client.once(Events.ClientReady, readyClient => {
-    console.log(`BOT started how ${readyClient.user.tag}`);
+client.once(Events.ClientReady, async readyClient => {
+    console.log(`✅ BOT iniciado como ${readyClient.user.tag}`);
+    await tareasGlobales();
 });
 
 // Manejo de interacciones
@@ -64,7 +82,7 @@ client.on(Events.InteractionCreate, async interaction => {
     } catch (error) {
         console.error(error);
         const replyOptions = {
-            content: 'Hubo un error al ejecutar el comando.',
+            content: '⚠️ Hubo un error al ejecutar el comando.',
             ephemeral: true,
         };
         if (interaction.replied || interaction.deferred) {
@@ -75,7 +93,17 @@ client.on(Events.InteractionCreate, async interaction => {
     }
 });
 
-// Iniciar sesión en Discord
+// Comando local por mensaje (ejecución manual de tareas simultáneas)
+client.on('messageCreate', async message => {
+    if (message.content === '!iniciar') {
+        await Promise.all([
+            message.channel.send('🔧 Ejecutando Tarea A (local)...'),
+            message.channel.send('⚙️ Ejecutando Tarea B (local)...'),
+            message.channel.send('🚀 Ejecutando Tarea C (local)...')
+        ]);
+    }
+});
+
 client.login(token);
 
 // Manejo de errores generales
