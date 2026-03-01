@@ -4,7 +4,7 @@ const path = require('path');
 const express = require('express');
 const { Collection, Client, Events, GatewayIntentBits } = require('discord.js');
 
-const token = process.env.token;
+const token = process.env.TOKEN;
 if (!token) {
     console.error("❌ No se encontró el TOKEN en variables de entorno");
     process.exit(1);
